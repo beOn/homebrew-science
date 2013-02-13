@@ -17,7 +17,14 @@ class Shogun < Formula
     end
   end
 
-  def test
-    system "shogun"
+  test do
+    Pathname.new('test.sg').write <<-EOF.undent
+      new_classifier LIBSVM
+      save_classifier test.model
+      exit
+    EOF
+    
+    system bin/"shogun", "test.sg"
+    File.exist?("test.model")
   end
 end
