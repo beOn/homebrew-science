@@ -10,14 +10,22 @@ class Shogun < Formula
   depends_on 'lua' => :optional
 
   def install
+    args = ""
+    pydir = "#{which_python}/site-packages"  # <-- using this works... but requires PYTHONPATH change
+    # pydir = lib/which_python/"site-packages"   # <-- using this puts .so in wrong dir :(
+    # pydir.mkpath                               # <-- blindly copied from another formula. smart, eh?
+    ENV['PYTHONPATH'] = pydir
+    args << "--prefix=#{prefix} --pydir=#{pydir}"
+    puts args
+    
     cd 'src' do
-      system "./configure", "--prefix=#{prefix}"
+      system "./configure", args
       system "make"
       system "make install"
     end
   end
 
-  test do
+  def test
     Pathname.new('test.sg').write <<-EOF.undent
       new_classifier LIBSVM
       save_classifier test.model
@@ -26,5 +34,9 @@ class Shogun < Formula
     
     system bin/"shogun", "test.sg"
     File.exist?("test.model")
+  end
+  
+  def which_python
+    "python" + `python -c 'import sys;print(sys.version[:3])'`.strip
   end
 end
